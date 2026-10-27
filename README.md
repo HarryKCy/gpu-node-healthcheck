@@ -1,5 +1,7 @@
 # GPU Node Healthcheck
 
+[![Tests](https://github.com/HarryKCy/gpu-node-healthcheck/actions/workflows/test.yml/badge.svg)](https://github.com/HarryKCy/gpu-node-healthcheck/actions/workflows/test.yml)
+
 A lightweight Linux infrastructure monitoring tool with optional NVIDIA GPU telemetry and Prometheus integration.
 
 ## Features
