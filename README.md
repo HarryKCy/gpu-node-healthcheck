@@ -113,3 +113,50 @@ GitHub: https://github.com/HarryKCy
 ## License
 
 No license has been assigned.
+
+## Docker Compose Monitoring Stack
+
+The project includes a local monitoring environment using Prometheus and Grafana.
+
+### Start the Python exporter
+
+In your first terminal:
+
+    python3 exporter.py
+
+The exporter listens on:
+
+    http://127.0.0.1:9105/metrics
+
+### Start Prometheus and Grafana
+
+In a second terminal:
+
+    sudo docker compose up -d
+
+Open the applications:
+
+- Prometheus: http://127.0.0.1:9090
+- Grafana: http://127.0.0.1:3000
+
+The services use Docker host networking and are configured to bind their web interfaces to localhost.
+
+### Configure Grafana
+
+1. Open Grafana.
+2. Change the default administrator password.
+3. Add a Prometheus datasource using http://127.0.0.1:9090.
+4. Import dashboards/gpu-node-overview.json.
+5. Select your Prometheus datasource during import.
+
+### Stop the monitoring stack
+
+    sudo docker compose down
+
+Persistent monitoring data is stored in Docker volumes.
+
+### Security
+
+This monitoring stack is designed for local development and testing.
+
+Do not expose the exporter, Prometheus or Grafana directly to the public internet.
