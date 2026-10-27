@@ -1,5 +1,7 @@
 """Convert GPU Node Healthcheck results to Prometheus text metrics."""
 
+import math
+
 
 def escape_label(value):
     """Escape values for Prometheus labels."""
@@ -15,6 +17,9 @@ def metric(name, value, description, metric_type="gauge", labels=None):
     """Format a metric in Prometheus text exposition format."""
     if value is None:
         return ""
+
+    if not isinstance(value, (int, float)) or not math.isfinite(value):
+        raise ValueError(f"Invalid numeric value for {name}: {value!r}")
 
     label_text = ""
 
@@ -87,12 +92,21 @@ def format_metrics(result):
 
     add(
         "gpu_node_health_status",
-        0 if result["status"] == "OK" else 2,
-        "Node health status, 0 OK, 2 critical"
+        {"OK": 0, "CRITICAL": 2}.get(result["status"], 3),
+        "Node health status, 0 OK, 2 critical, 3 unknown"
     )
 
     for iface in result.get("network", []):
         labels = {"interface": iface["name"]}
+
+        success = iface.get("collection_success", True)
+        add("gpu_node_network_collection_success", int(success),
+            "Whether all interface counters were collected", labels=labels)
+        state = iface.get("state", "unknown")
+        add("gpu_node_network_interface_info", 1, "Reported Linux interface state",
+            labels={**labels, "state": state})
+        if not success:
+            continue
 
         for field in (
             "rx_bytes",
@@ -110,7 +124,17 @@ def format_metrics(result):
                 labels=labels
             )
 
-    for gpu in result.get("gpu", {}).get("devices", []):
+    gpu_result = result.get("gpu", {})
+    state = gpu_result.get("state", "unknown")
+    add("gpu_node_gpu_collection_info", 1, "NVIDIA collection state; absence is not a device fault",
+        labels={"state": state})
+    add("gpu_node_gpu_collection_success", int(state == "ok"),
+        "Whether all requested NVIDIA telemetry was collected")
+    if state in ("ok", "partial", "no_devices"):
+        add("gpu_node_gpu_devices", len(gpu_result.get("devices", [])),
+            "Detected GPUs; omitted when device presence is unknown")
+
+    for gpu in gpu_result.get("devices", []):
         labels = {
             "gpu": gpu["index"],
             "name": gpu["name"]

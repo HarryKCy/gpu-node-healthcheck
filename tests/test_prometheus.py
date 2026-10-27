@@ -1,9 +1,8 @@
 """Automated tests for Prometheus metrics formatting."""
 
 import unittest
-from collections import Counter
 
-from prometheus import format_metrics
+from prometheus import escape_label, format_metrics, metric
 
 
 class PrometheusMetricsTest(unittest.TestCase):
@@ -121,6 +120,52 @@ class PrometheusMetricsTest(unittest.TestCase):
             'gpu_node_gpu_utilization_percent',
             metrics
         )
+
+    def test_label_escaping(self):
+        self.assertEqual(escape_label('GPU"\\\n'), 'GPU\\"\\\\\\n')
+
+    def test_optional_gpu_fields_are_omitted(self):
+        self.result['gpu']['devices'][0]['temp_c'] = None
+        self.result['gpu']['state'] = 'partial'
+        output = format_metrics(self.result)
+        self.assertNotIn('gpu_node_gpu_temperature_celsius', output)
+        self.assertIn('gpu_node_gpu_memory_used_mib{gpu="0",name="NVIDIA Test GPU"} 1024.0', output)
+        self.assertIn('gpu_node_gpu_collection_info{state="partial"} 1', output)
+        self.assertIn('gpu_node_gpu_collection_success 0', output)
+        self.assertIn('gpu_node_gpu_devices 1', output)
+
+    def test_absent_gpu_and_unknown_presence_are_distinct(self):
+        for state in ('not_installed', 'timeout', 'error', 'parse_error', 'empty', 'no_devices'):
+            with self.subTest(state=state):
+                self.result['gpu'] = {'state': state, 'devices': []}
+                output = format_metrics(self.result)
+                self.assertNotIn('gpu_node_gpu_temperature_celsius', output)
+                if state == 'no_devices':
+                    self.assertIn('gpu_node_gpu_devices 0', output)
+                else:
+                    self.assertNotIn('gpu_node_gpu_devices', output)
+
+    def test_invalid_network_counters_are_not_exported_as_zero(self):
+        self.result['network'][0]['collection_success'] = False
+        output = format_metrics(self.result)
+        self.assertIn('gpu_node_network_collection_success{interface="eth0"} 0', output)
+        self.assertNotIn('gpu_node_network_rx_bytes_total{interface="eth0"}', output)
+        self.assertIn('gpu_node_network_rx_bytes_total{interface="eth1"} 3000', output)
+
+    def test_unknown_health_status(self):
+        self.result['status'] = 'UNKNOWN'
+        self.assertIn('gpu_node_health_status 3', format_metrics(self.result))
+
+    def test_invalid_metric_value(self):
+        for value in (float('nan'), float('inf'), 'not numeric'):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                metric('test', value, 'Test gauge')
+
+    def test_multi_gpu_metadata_once(self):
+        self.result['gpu']['devices'].append({**self.result['gpu']['devices'][0], 'index': '1'})
+        output = format_metrics(self.result)
+        self.assertEqual(output.count('# TYPE gpu_node_gpu_temperature_celsius gauge'), 1)
+        self.assertIn('gpu_node_gpu_temperature_celsius{gpu="1",name="NVIDIA Test GPU"} 50.0', output)
 
 
 if __name__ == "__main__":

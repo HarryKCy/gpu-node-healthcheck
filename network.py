@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """Read-only Linux network interface statistics."""
 
+import logging
 from pathlib import Path
+
+LOGGER = logging.getLogger(__name__)
 
 
 SYS_NET = Path("/sys/class/net")
@@ -19,10 +22,13 @@ def network_metrics(sys_net=SYS_NET):
     """Collect Linux network interface statistics."""
     interfaces = []
 
-    if not sys_net.exists():
+    # A failed directory read is a collection failure, not an empty healthy host.
+    try:
+        entries = sorted(sys_net.iterdir())
+    except FileNotFoundError:
         return interfaces
 
-    for interface in sorted(sys_net.iterdir()):
+    for interface in entries:
         name = interface.name
 
         if name == "lo":
@@ -30,11 +36,19 @@ def network_metrics(sys_net=SYS_NET):
 
         stats = interface / "statistics"
 
+        counters_ok = True
+
         def counter(key):
-            value = read_value(stats / key, "0")
+            nonlocal counters_ok
+            value = read_value(stats / key)
             try:
-                return int(value)
+                number = int(value)
+                if number < 0:
+                    raise ValueError("Negative network counter")
+                return number
             except (TypeError, ValueError):
+                counters_ok = False
+                LOGGER.warning("Unavailable network counter: %s/%s", name, key)
                 return 0
 
         interfaces.append({
@@ -47,5 +61,8 @@ def network_metrics(sys_net=SYS_NET):
             "rx_dropped": counter("rx_dropped"),
             "tx_dropped": counter("tx_dropped"),
         })
+        # Keep legacy JSON zeros, but prevent the exporter from reporting them
+        # as measured counters when an interface disappears or reads fail.
+        interfaces[-1]["collection_success"] = counters_ok
 
     return interfaces

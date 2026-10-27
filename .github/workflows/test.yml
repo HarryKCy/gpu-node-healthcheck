@@ -1,12 +1,49 @@
 name: Tests
 on: [push, pull_request]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.12', '3.13', '3.14']
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
         with:
-          python-version: '3.12'
-      - run: python3 -m unittest discover -s tests -v
-      - run: python3 healthcheck.py > /dev/null
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+      # Application and tests use the standard library; no pip install required.
+      - name: Validate Python syntax
+        run: python -m compileall -q healthcheck.py network.py prometheus.py exporter.py tests
+      - name: Run deterministic tests without NVIDIA hardware
+        run: python -m unittest discover -s tests -v
+      - name: Check whitespace errors
+        run: git show --format= --check HEAD
+
+  monitoring-config:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Validate Docker Compose
+        run: docker compose config --quiet
+      - name: Validate dashboard JSON
+        run: python3 -m json.tool dashboards/gpu-node-overview.json > /dev/null
+      - name: Validate Prometheus configuration
+        run: >-
+          docker run --rm --network none --entrypoint /bin/promtool
+          --mount type=bind,source="${{ github.workspace }}/monitoring/prometheus.yml",target=/etc/prometheus/prometheus.yml,readonly
+          prom/prometheus:v3.7.0 check config /etc/prometheus/prometheus.yml
