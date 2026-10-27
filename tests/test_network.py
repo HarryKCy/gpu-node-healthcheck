@@ -3,6 +3,7 @@
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from network import network_metrics
 
@@ -68,6 +69,33 @@ class NetworkMetricsTest(unittest.TestCase):
 
             self.assertEqual(result[0]["state"], "down")
             self.assertEqual(result[0]["rx_errors"], 0)
+
+    def test_directory_permission_failure(self):
+        with patch.object(Path, 'iterdir', side_effect=PermissionError('denied')):
+            with self.assertRaises(PermissionError):
+                network_metrics(Path('/mock/sys/net'))
+
+    def test_missing_and_negative_counters_report_failure(self):
+        for value in (None, '-1', 'invalid'):
+            with self.subTest(value=value), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                stats = root / 'eth0' / 'statistics'
+                stats.mkdir(parents=True)
+                if value is not None:
+                    (stats / 'rx_bytes').write_text(value)
+                with self.assertLogs('network', level='WARNING'):
+                    result = network_metrics(root)
+                self.assertFalse(result[0]['collection_success'])
+                self.assertEqual(result[0]['state'], 'unknown')
+
+    def test_interfaces_sorted(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'eth2').mkdir()
+            (root / 'eth1').mkdir()
+            with self.assertLogs('network', level='WARNING'):
+                result = network_metrics(root)
+            self.assertEqual([iface['name'] for iface in result], ['eth1', 'eth2'])
 
 
 if __name__ == "__main__":
