@@ -82,7 +82,7 @@ def main():
             {'labels': '{interface="eth0",instance="other-node:9105",job="gpu-node-healthcheck"}', 'value': 10},
         ]
     tests.append(case)
-    result = {'rule_files': [], 'evaluation_interval': '15s', 'tests': tests}
+    result = {'rule_files': [], 'evaluation_interval': '15s', 'fuzzy_compare': True, 'tests': tests}
     with args.output.open('x', encoding='utf-8') as stream:
         json.dump(result, stream, indent=2)
         stream.write('\n')
