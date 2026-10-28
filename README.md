@@ -188,6 +188,7 @@ README.md                      Project documentation
 ## Author
 
 **Harry Karasavvas** — Linux and Infrastructure Engineering
+
 GitHub: [HarryKCy](https://github.com/HarryKCy)
 
 ## License
