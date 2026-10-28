@@ -185,21 +185,6 @@ tests/                         Automated Python tests
 README.md                      Project documentation
 ```
 
-## Security and operational boundaries
-
-- Exporter, Prometheus, and Grafana are configured to listen on **localhost**. Do not expose them directly to the public internet.
-- Secure Grafana administrator credentials; do not commit secrets to this repository.
-- Docker management privileges should be granted deliberately (membership in the Docker group confers powerful host access).
-- The included configuration is for local or trusted laboratory use. A production rollout would require access controls, persistent service management for the exporter, alerting, monitoring of the monitoring stack, and deployment-specific hardening.
-- GPU queries are optional; real GPU monitoring requires supported hardware, drivers, and appropriate permissions.
-
-## Limitations and roadmap
-
-- **Real NVIDIA GPU validation is pending.** Current GPU parsing and failure-state handling were tested using mocks; results must be checked on compatible hardware.
-- The exporter currently runs separately from the Docker Compose stack.
-- Additional GPU health indicators (where supported by hardware) and production alerting are possible future improvements.
-- No screenshot is included yet; a future dashboard capture from real GPU hardware will be more representative.
-
 ## Author
 
 **Harry Karasavvas** — Linux and Infrastructure Engineering
