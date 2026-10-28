@@ -157,18 +157,6 @@ python3 -m unittest discover -s tests -v
 
 GitHub Actions runs tests against Python **3.11, 3.12, 3.13, and 3.14**, and separately checks Docker Compose configuration, dashboard JSON, and Prometheus configuration. See the [workflow runs](https://github.com/HarryKCy/gpu-node-healthcheck/actions) for current CI results.
 
-### Runtime validation performed
-
-An isolated Docker Compose deployment was tested using separate project-scoped volumes and alternate localhost ports. Validation confirmed:
-
-- Prometheus and Grafana containers reached healthy states.
-- The Grafana datasource and dashboard were automatically provisioned.
-- The exporter was scrapeable and Grafana could query Prometheus.
-- All 16 dashboard PromQL queries executed successfully.
-- Live CPU, memory, disk, and network metrics were visible in Grafana.
-- On a laptop without NVIDIA support, GPU telemetry was reported as unavailable rather than fabricated.
-
-These observations validate the Linux-only environment; they do **not** constitute validation against physical NVIDIA GPUs.
 
 ## Project layout
 
