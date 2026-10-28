@@ -579,7 +579,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "rate(gpu_node_network_rx_bytes_total{job=\"gpu-node-healthcheck\",instance=~\"$instance\"}[$__rate_interval])",
+          "expr": "rate(gpu_node_network_rx_bytes_total{job=\"gpu-node-healthcheck\",instance=~\"$instance\"}[$__rate_interval]) and on (job, instance, interface) (gpu_node_network_collection_success{job=\"gpu-node-healthcheck\",instance=~\"$instance\"} == 1) and on (job, instance) (up{job=\"gpu-node-healthcheck\",instance=~\"$instance\"} == 1)",
           "legendFormat": "{{instance}} / {{interface}} RX",
           "editorMode": "code",
           "range": true,
@@ -587,7 +587,7 @@
         },
         {
           "refId": "B",
-          "expr": "rate(gpu_node_network_tx_bytes_total{job=\"gpu-node-healthcheck\",instance=~\"$instance\"}[$__rate_interval])",
+          "expr": "rate(gpu_node_network_tx_bytes_total{job=\"gpu-node-healthcheck\",instance=~\"$instance\"}[$__rate_interval]) and on (job, instance, interface) (gpu_node_network_collection_success{job=\"gpu-node-healthcheck\",instance=~\"$instance\"} == 1) and on (job, instance) (up{job=\"gpu-node-healthcheck\",instance=~\"$instance\"} == 1)",
           "legendFormat": "{{instance}} / {{interface}} TX",
           "editorMode": "code",
           "range": true,
@@ -685,7 +685,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "rate(gpu_node_network_rx_errors_total{job=\"gpu-node-healthcheck\",instance=~\"$instance\"}[$__rate_interval])",
+          "expr": "rate(gpu_node_network_rx_errors_total{job=\"gpu-node-healthcheck\",instance=~\"$instance\"}[$__rate_interval]) and on (job, instance, interface) (gpu_node_network_collection_success{job=\"gpu-node-healthcheck\",instance=~\"$instance\"} == 1) and on (job, instance) (up{job=\"gpu-node-healthcheck\",instance=~\"$instance\"} == 1)",
           "legendFormat": "{{instance}} / {{interface}} rx_errors",
           "editorMode": "code",
           "range": true,
@@ -693,7 +693,7 @@
         },
         {
           "refId": "B",
-          "expr": "rate(gpu_node_network_tx_errors_total{job=\"gpu-node-healthcheck\",instance=~\"$instance\"}[$__rate_interval])",
+          "expr": "rate(gpu_node_network_tx_errors_total{job=\"gpu-node-healthcheck\",instance=~\"$instance\"}[$__rate_interval]) and on (job, instance, interface) (gpu_node_network_collection_success{job=\"gpu-node-healthcheck\",instance=~\"$instance\"} == 1) and on (job, instance) (up{job=\"gpu-node-healthcheck\",instance=~\"$instance\"} == 1)",
           "legendFormat": "{{instance}} / {{interface}} tx_errors",
           "editorMode": "code",
           "range": true,
@@ -701,7 +701,7 @@
         },
         {
           "refId": "C",
-          "expr": "rate(gpu_node_network_rx_dropped_total{job=\"gpu-node-healthcheck\",instance=~\"$instance\"}[$__rate_interval])",
+          "expr": "rate(gpu_node_network_rx_dropped_total{job=\"gpu-node-healthcheck\",instance=~\"$instance\"}[$__rate_interval]) and on (job, instance, interface) (gpu_node_network_collection_success{job=\"gpu-node-healthcheck\",instance=~\"$instance\"} == 1) and on (job, instance) (up{job=\"gpu-node-healthcheck\",instance=~\"$instance\"} == 1)",
           "legendFormat": "{{instance}} / {{interface}} rx_dropped",
           "editorMode": "code",
           "range": true,
@@ -709,7 +709,7 @@
         },
         {
           "refId": "D",
-          "expr": "rate(gpu_node_network_tx_dropped_total{job=\"gpu-node-healthcheck\",instance=~\"$instance\"}[$__rate_interval])",
+          "expr": "rate(gpu_node_network_tx_dropped_total{job=\"gpu-node-healthcheck\",instance=~\"$instance\"}[$__rate_interval]) and on (job, instance, interface) (gpu_node_network_collection_success{job=\"gpu-node-healthcheck\",instance=~\"$instance\"} == 1) and on (job, instance) (up{job=\"gpu-node-healthcheck\",instance=~\"$instance\"} == 1)",
           "legendFormat": "{{instance}} / {{interface}} tx_dropped",
           "editorMode": "code",
           "range": true,
@@ -858,7 +858,7 @@
       ],
       "title": "NVIDIA collection state",
       "type": "stat",
-      "description": "ok: complete telemetry; partial: unsupported sensors; not_installed: tool unavailable, hardware unknown; no_devices: NVIDIA reports no devices; empty, error, timeout or parse_error: telemetry unavailable, not proof of GPU hardware failure. Instance identity is retained in metric labels; use the instance selector to view a specific node."
+      "description": "ok: complete telemetry; partial: unsupported sensors; not_installed: tool unavailable, hardware unknown; no_devices: NVIDIA reports no devices; empty, error, timeout or parse_error: telemetry unavailable, not proof of GPU hardware failure. Instance identity is retained in metric labels; use the instance selector to view a specific node. parse_error may retain independently valid devices; the total device count is omitted when enumeration is incomplete. Failed attempted collection yields UNKNOWN unless a critical finding takes precedence."
     },
     {
       "datasource": {

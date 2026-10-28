@@ -13,7 +13,7 @@ def escape_label(value):
     )
 
 
-def metric(name, value, description, metric_type="gauge", labels=None):
+def sample(name, value, labels=None):
     """Format a metric in Prometheus text exposition format."""
     if value is None:
         return ""
@@ -21,6 +21,8 @@ def metric(name, value, description, metric_type="gauge", labels=None):
     if not isinstance(value, (int, float)) or not math.isfinite(value):
         raise ValueError(f"Invalid numeric value for {name}: {value!r}")
 
+    if isinstance(value, bool):
+        value = int(value)
     label_text = ""
 
     if labels:
@@ -29,42 +31,27 @@ def metric(name, value, description, metric_type="gauge", labels=None):
             for key, val in labels.items()
         ) + "}"
 
-    return (
-        f"# HELP {name} {description}\n"
-        f"# TYPE {name} {metric_type}\n"
-        f"{name}{label_text} {value}\n"
-    )
+    return f"{name}{label_text} {value}\n"
 
+
+def metric(name, value, description, metric_type="gauge", labels=None):
+    """Render one metric with metadata (also used by standalone callers)."""
+    if value is None:
+        return ""
+    return (f"# HELP {name} {description}\n# TYPE {name} {metric_type}\n"
+            + sample(name, value, labels))
 
 
 def format_metrics(result):
-    """Generate valid Prometheus text metrics."""
-    output = []
-    declared = set()
+    """Render each family once, without reparsing or changing label content."""
+    families = {}
 
     def add(name, value, description, metric_type="gauge", labels=None):
         if value is None:
             return
-
-        block = metric(
-            name,
-            value,
-            description,
-            metric_type=metric_type,
-            labels=labels
-        )
-
-        lines = block.strip().splitlines()
-
-        if name not in declared:
-            output.extend(lines)
-            declared.add(name)
-        else:
-            output.extend(
-                line for line in lines
-                if not line.startswith("# HELP ")
-                and not line.startswith("# TYPE ")
-            )
+        if name not in families:
+            families[name] = [f"# HELP {name} {description}\n# TYPE {name} {metric_type}\n"]
+        families[name].append(sample(name, value, labels))
 
     add(
         "gpu_node_memory_used_percent",
@@ -153,4 +140,4 @@ def format_metrics(result):
                 labels=labels
             )
 
-    return "\n".join(output) + "\n"
+    return "".join("".join(family) for family in families.values())

@@ -51,9 +51,9 @@ class NetworkMetricsTest(unittest.TestCase):
     def test_missing_network_path(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "nonexistent"
-            result = network_metrics(root)
-
-            self.assertEqual(result, [])
+            # Missing enumeration is unavailable evidence, unlike loopback-only.
+            with self.assertRaises(FileNotFoundError):
+                network_metrics(root)
 
     def test_invalid_counter(self):
         with tempfile.TemporaryDirectory() as tmp:

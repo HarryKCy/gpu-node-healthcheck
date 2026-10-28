@@ -23,10 +23,7 @@ def network_metrics(sys_net=SYS_NET):
     interfaces = []
 
     # A failed directory read is a collection failure, not an empty healthy host.
-    try:
-        entries = sorted(sys_net.iterdir())
-    except FileNotFoundError:
-        return interfaces
+    entries = sorted(sys_net.iterdir())
 
     for interface in entries:
         name = interface.name

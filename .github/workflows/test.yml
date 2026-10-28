@@ -47,3 +47,10 @@ jobs:
           docker run --rm --network none --entrypoint /bin/promtool
           --mount type=bind,source="${{ github.workspace }}/monitoring/prometheus.yml",target=/etc/prometheus/prometheus.yml,readonly
           prom/prometheus:v3.7.0 check config /etc/prometheus/prometheus.yml
+      - name: Generate dashboard semantic tests
+        run: python3 tools/make_promql_cases.py dashboards/gpu-node-overview.json "${{ runner.temp }}/gpu-promql.json"
+      - name: Validate dashboard missing-data semantics
+        run: >-
+          docker run --rm --network none --entrypoint /bin/promtool
+          --mount type=bind,source="${{ runner.temp }}/gpu-promql.json",target=/tests.json,readonly
+          prom/prometheus:v3.7.0 test rules /tests.json
