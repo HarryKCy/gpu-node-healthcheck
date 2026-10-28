@@ -110,9 +110,9 @@ class LinuxReliabilityTest(unittest.TestCase):
 
     def test_cpu_count_unavailable(self):
         self.mocks['os.cpu_count'].return_value = None
-        result = healthcheck.collect_metrics()
-        self.assertEqual(result['logical_cpus'], 1)
-        self.assertIn('load per logical CPU high', result['alerts'])
+        # Never manufacture a host-capacity denominator.
+        with self.assertRaisesRegex(ValueError, 'CPU count'):
+            healthcheck.collect_metrics()
 
     def test_cpu_failure(self):
         self.mocks['os.getloadavg'].side_effect = OSError('load unavailable')

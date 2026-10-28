@@ -1,7 +1,6 @@
 """Exercise the real HTTP handler on loopback with mocked collection."""
 from concurrent.futures import ThreadPoolExecutor
 from http.client import HTTPConnection
-from http.server import ThreadingHTTPServer
 import threading
 import unittest
 from unittest.mock import patch
@@ -19,7 +18,7 @@ SNAPSHOT = {
 class ExporterTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.server = ThreadingHTTPServer(('127.0.0.1', 0), exporter.MetricsHandler)
+        cls.server = exporter.MetricsServer(('127.0.0.1', 0))
         cls.thread = threading.Thread(target=cls.server.serve_forever, kwargs={'poll_interval': 0.01})
         cls.thread.start()
 
