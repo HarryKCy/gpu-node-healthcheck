@@ -4,8 +4,6 @@
 
 A lightweight, standard-library Python monitoring project for **Linux infrastructure health and observability**. It provides command-line health checks and a Prometheus HTTP exporter for host resources and network interfaces, with **optional NVIDIA GPU telemetry**. A Docker Compose stack supplies Prometheus and an automatically provisioned Grafana dashboard.
 
-This is a hands-on Linux/SRE engineering portfolio project focused on explicit failure states, automated testing, and reproducible monitoring configuration.
-
 ## Architecture
 
 ```text
@@ -153,7 +151,7 @@ Run the Python tests locally:
 python3 -m unittest discover -s tests -v
 ```
 
-**Verified locally on Ubuntu 24.04 / Python 3.12**, 55 tests passed. The suite uses mocked NVIDIA responses and does not require a physical GPU.
+**Verified on Ubuntu 24.04 / Python 3.12**, 55 tests passed. The suite uses mocked NVIDIA responses and does not require a physical GPU.
 
 GitHub Actions runs tests against Python **3.11, 3.12, 3.13, and 3.14**, and separately checks Docker Compose configuration, dashboard JSON, and Prometheus configuration. See the [workflow runs](https://github.com/HarryKCy/gpu-node-healthcheck/actions) for current CI results.
 
