@@ -8,6 +8,7 @@ services:
       - --storage.tsdb.path=/prometheus
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alerts:/etc/prometheus/alerts:ro
       - prometheus_data:/prometheus
     restart: unless-stopped
 
