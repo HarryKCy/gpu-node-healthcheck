@@ -42,10 +42,10 @@ jobs:
         run: docker compose config --quiet
       - name: Validate dashboard JSON
         run: python3 -m json.tool dashboards/gpu-node-overview.json > /dev/null
-      - name: Validate Prometheus configuration
+      - name: Validate Prometheus configuration and alert rules
         run: >-
           docker run --rm --network none --entrypoint /bin/promtool
-          --mount type=bind,source="${{ github.workspace }}/monitoring/prometheus.yml",target=/etc/prometheus/prometheus.yml,readonly
+          --mount type=bind,source="${{ github.workspace }}/monitoring",target=/etc/prometheus,readonly
           prom/prometheus:v3.7.0 check config /etc/prometheus/prometheus.yml
       - name: Generate dashboard semantic tests
         run: python3 tools/make_promql_cases.py dashboards/gpu-node-overview.json "${{ runner.temp }}/gpu-promql.json"
