@@ -151,7 +151,7 @@ Run the Python tests locally:
 python3 -m unittest discover -s tests -v
 ```
 
-**Verified on Ubuntu 24.04 / Python 3.12**, 55 tests passed. The suite uses mocked NVIDIA responses and does not require a physical GPU.
+**Verified on Ubuntu 24.04 / Python 3.12**, 97 tests passed. The suite uses mocked NVIDIA responses and does not require a physical GPU.
 
 GitHub Actions runs tests against Python **3.11, 3.12, 3.13, and 3.14**, and separately checks Docker Compose configuration, dashboard JSON, and Prometheus configuration. See the [workflow runs](https://github.com/HarryKCy/gpu-node-healthcheck/actions) for current CI results.
 
@@ -180,3 +180,44 @@ GitHub: [HarryKCy](https://github.com/HarryKCy)
 ## License
 
 No license has been assigned. All rights remain with the repository owner unless a license is added.
+
+## Reliability Engineering — Prometheus Alerting
+
+The monitoring stack includes a Prometheus alert that detects exporter
+scrape failures.
+
+### Alert configuration
+
+- **Alert:** `GPUNodeExporterUnavailable`
+- **Expression:** `up{job="gpu-node-healthcheck"} == 0`
+- **Pending duration:** 2 minutes
+- **Severity:** Warning
+- **Scrape interval:** 15 seconds
+
+### Verified failure-and-recovery exercise
+
+A controlled local exporter outage was tested on Ubuntu.
+
+| Test | Observed result |
+|---|---|
+| Exporter unavailable | Prometheus reported `up=0` |
+| Failure detection | Alert entered FIRING state |
+| Exporter restored | HTTP `/metrics` returned 200 |
+| Recovery detection | Prometheus reported `up=1` |
+| Alert resolution | Alert returned to INACTIVE |
+
+The exercise validates exporter availability monitoring and alert recovery.
+It does not demonstrate physical GPU hardware failure detection or
+automated infrastructure remediation.
+
+### Operational documentation
+
+See [GPU Exporter Alerting Runbook](docs/gpu-exporter-alerting.md)
+for troubleshooting procedures, recovery verification, and limitations.
+
+### Automated validation
+
+The Python test suite contains 97 passing tests, including the
+Prometheus alert contract test.
+
+Prometheus rules and configuration are validated using `promtool`.

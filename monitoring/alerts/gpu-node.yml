@@ -1,0 +1,11 @@
+groups:
+  - name: gpu_node_reliability
+    rules:
+      - alert: GPUNodeExporterUnavailable
+        expr: up{job="gpu-node-healthcheck"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "GPU node exporter scrape failed"
+          description: "Prometheus cannot scrape the configured gpu-node-healthcheck target for two minutes. Verify the job label against prometheus.yml before enabling."
