@@ -28,7 +28,10 @@ def network_metrics(sys_net=SYS_NET):
     for interface in entries:
         name = interface.name
 
-        if name == "lo":
+        # Exclude loopback and the Linux bonding control entry.
+        # bonding_masters is not a network interface and has no
+        # standard interface statistics.
+        if name in ("lo", "bonding_masters"):
             continue
 
         stats = interface / "statistics"
